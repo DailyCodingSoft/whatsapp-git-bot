@@ -98,18 +98,32 @@ function initWhatsApp() {
     }
   }
 
-  //Verificar firma de gitHub
+  //Verificar firma de gitHub con firma de cada webhook
   function verifyGitHubSignature(payload, signature) {
-    if (!GITHUB_SECRET) return true;
-    
+    if (!GITHUB_SECRET) {
+      return true;
+    }
+
+    // Verificar que exista la firma
+    if (!signature) {
+      return false;
+    }
+
+    // Crear un hash HMAC con nuestro secret
     const hmac = crypto.createHmac('sha256', GITHUB_SECRET);
     const digest = 'sha256=' + hmac.update(JSON.stringify(payload)).digest('hex');
     
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(digest)
-    );
+    // Comparar de forma segura
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(digest)
+      );
+    } catch (error) {
+      return false;
+    }
   }
+
 
 
 }
