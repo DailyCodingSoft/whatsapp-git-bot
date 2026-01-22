@@ -196,4 +196,63 @@ function initWhatsApp() {
 
     return message;
   }
+
+  //Endpoint para weebhook de github
+  app.post('/webhook/github', async (req, res) => {
+    console.log('WEBHOOK RECIBIDO DE GITHUB\n');
+
+    // Obtener información del header con headers de gitHub
+    const signature = req.headers['x-hub-signature-256'];
+    const eventType = req.headers['x-github-event']; // Tipo de evento tomado, "Commits por lo general en este proyecto"
+    const delivery = req.headers['x-github-delivery']; // Id unico del weebhook
+
+    console.log(`Evento: ${eventType}`);
+    console.log(`Delivery ID: ${delivery}`);
+
+    // Verificar la firma de seguridad
+    if (!verifyGitHubSignature(req.body, signature)) {
+      console.error('❌ FIRMA INVÁLIDA - Webhook rechazado');
+      return res.status(403).json({ 
+        error: 'Firma inválida',
+        message: 'El webhook no viene de GitHub o el secret es incorrecto'
+      });
+    }
+
+    console.log('✅ Firma verificada correctamente');
+
+    // Solo procesar eventos de tipo "push"
+    if (eventType !== 'push') {
+      console.log(`ℹ️ Evento ignorado: ${eventType}`);
+      return res.json({ 
+        status: 'ignored',
+        message: `Solo procesamos eventos "push", recibido: "${eventType}"`
+      });
+    }
+
+    const payload = req.body;
+
+    // Formatear el mensaje
+    const message = formatCommitMessage(payload);
+
+    // Enviar a WhatsApp
+    console.log('\n📤 Enviando mensaje a WhatsApp...');
+    const sent = await sendWhatsAppMessage(message);
+
+    if (sent) {
+      console.log('✅ Notificación enviada exitosamente');
+      console.log('═'.repeat(50) + '\n');
+      return res.json({ 
+        status: 'success',
+        message: 'Notificación enviada a WhatsApp'
+      });
+    } else {
+      console.error('❌ No se pudo enviar la notificación');
+      console.log('═'.repeat(50) + '\n');
+      return res.status(500).json({ 
+        status: 'error',
+        message: 'No se pudo enviar a WhatsApp'
+      });
+    }
+  });
+
 }
