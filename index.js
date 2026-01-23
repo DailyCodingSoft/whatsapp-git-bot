@@ -255,4 +255,38 @@ function initWhatsApp() {
     }
   });
 
+  //Endpoint para obtener chats
+
+  //Conocer el id del grupo de whatsapp
+  app.get('/chats', async (req, res) => {
+    if (!isWhatsAppReady) {
+      return res.status(503).json({ 
+        error: 'WhatsApp no está conectado',
+        message: 'Espera a que WhatsApp se conecte'
+      });
+    }
+    try {
+      // Obtener todos los chats
+      const chats = await whatsappClient.getChats();
+      
+      // Formatear la lista de chats
+      const chatList = chats.map(chat => ({
+        id: chat.id._serialized,  //Id necesario
+        name: chat.name || 'Sin nombre',
+        isGroup: chat.isGroup,
+        unreadCount: chat.unreadCount
+      }));
+
+      console.log(`\n📋 Se encontraron ${chatList.length} chats`);
+
+      res.json({ 
+        total: chatList.length,
+        chats: chatList 
+      });
+    } catch (error) {
+      console.error('Error obteniendo chats:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
 }
