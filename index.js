@@ -289,4 +289,54 @@ function initWhatsApp() {
     }
   });
 
+  //Endpoint de prueba
+  app.post('/test', async (req, res) => {
+    console.log('Enviando mensaje de prueba');
+    
+    const testMessage = `*PRUEBA DEL BOT*\n\n` +
+      `¡El bot está funcionando correctamente!\n` +
+      `${new Date().toLocaleString('es-CO')}\n\n` +
+      `Ahora puedes configurar el webhook en GitHub.`;
+
+    const sent = await sendWhatsAppMessage(testMessage);
+    
+    if (sent) {
+      res.json({ 
+        status: 'success',
+        message: 'Mensaje de prueba enviado'
+      });
+    } else {
+      res.status(500).json({ 
+        status: 'error',
+        message: 'No se pudo enviar el mensaje de prueba'
+      });
+    }
+  });
+
+  //Verificar si el servidor esta vivo
+  app.get('/health', (req, res) => {
+    res.json({ 
+      status: 'healthy',
+      whatsapp: isWhatsAppReady ? 'connected' : 'disconnected',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  //Inicio del servidor
+  app.listen(PORT, () => {
+    console.log('\n' + '═'.repeat(50));
+    console.log('SERVIDOR INICIADO');
+    console.log('═'.repeat(50));
+    console.log(`Puerto: ${PORT}`);
+    console.log(`URL local: http://localhost:${PORT}`);
+    console.log(`Endpoints disponibles:`);
+    console.log(`   - POST /webhook/github (para GitHub)`);
+    console.log(`   - GET  /chats (lista tus chats)`);
+    console.log(`   - POST /test (mensaje de prueba)`);
+    console.log(`   - GET  /health (estado del servidor)`);
+    console.log('═'.repeat(50) + '\n');
+    initWhatsApp();
+  });
+
 }
