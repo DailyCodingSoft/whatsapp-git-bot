@@ -339,4 +339,22 @@ function initWhatsApp() {
     initWhatsApp();
   });
 
+  //Manejo de errores
+  process.on('unhandledRejection', (error) => {
+    console.error('❌ Error no manejado:', error);
+  });
+
+  // Cerrar cuando se termina el proceso
+  process.on('SIGINT', async () => {
+    console.log('\n\n👋 Cerrando bot...');
+    
+    if (whatsappClient) {
+      await whatsappClient.destroy();
+      console.log('WhatsApp desconectado');
+    }
+    
+    console.log('Servidor cerrado');
+    process.exit(0);
+  });
+
 }
