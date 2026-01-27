@@ -3,19 +3,30 @@ const express = require("express");
 const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
 const crypto = require("crypto");
+const { log } = require("console");
 require("dotenv").config();
+
+console.log('✅ Paso 1: Librerías cargadas');
 
 const app = express();
 app.use(express.json());
+
+console.log('✅ Paso 2: Express configurado');
 
 const PORT = process.env.PORT || 3000;
 const GITHUB_SECRET = process.env.GITHUB_SECRET || "";
 const WHATSAPP_CHAT_ID = process.env.WHATSAPP_CHAT_ID || "";
 
+console.log('✅ Paso 3: Variables cargadas');
+console.log('   PORT:', PORT);
+console.log('   GITHUB_SECRET:', GITHUB_SECRET ? 'Configurado' : 'Vacío');
+console.log('   WHATSAPP_CHAT_ID:', WHATSAPP_CHAT_ID ? 'Configurado' : 'Vacío');
+
 //Conexión de hatsapp
 let whatsappClient = null;
 //Bandera para saber si Whatsapp esta conectado y listo
 let isWhatsAppReady = false;
+
 
 function initWhatsApp() {
   console.log("\nInicializando WhatsApp Web...\n");
@@ -29,6 +40,7 @@ function initWhatsApp() {
     //Tener un navegador invisible
     puppeteer: {
       headless: true,
+      executablePath: undefined,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -70,6 +82,9 @@ function initWhatsApp() {
     console.log("Desconectado:", reason);
     isWhatsAppReady = false;
   });
+
+  whatsappClient.initialize();
+}
 
   //Envio de mensajes con Whatsapp
   async function sendWhatsAppMessage(message, chatId = WHATSAPP_CHAT_ID) {
@@ -323,6 +338,8 @@ function initWhatsApp() {
     });
   });
 
+  console.log('\n✅ Paso Final: Iniciando servidor...\n');
+
   //Inicio del servidor
   app.listen(PORT, () => {
     console.log('\n' + '═'.repeat(50));
@@ -356,5 +373,3 @@ function initWhatsApp() {
     console.log('Servidor cerrado');
     process.exit(0);
   });
-
-}
