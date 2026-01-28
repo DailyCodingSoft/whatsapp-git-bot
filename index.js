@@ -39,7 +39,7 @@ function initWhatsApp() {
 
     //Tener un navegador invisible
     puppeteer: {
-      headless: true,
+      headless: false,
       executablePath: undefined,
       args: [
         "--no-sandbox",
@@ -72,6 +72,11 @@ function initWhatsApp() {
 
   whatsappClient.on("authenticated", () => {
     console.log("Sesión de WhatsApp autenticada");
+      setTimeout(() => {
+      console.log("✅ Marcando WhatsApp como listo...");
+      isWhatsAppReady = true;
+      console.log("✅ ¡Bot listo para usar!");
+    }, 30000);
   });
 
   whatsappClient.on("auth_failure", (error) => {
@@ -84,6 +89,37 @@ function initWhatsApp() {
   });
 
   whatsappClient.initialize();
+    setTimeout(() => {
+    if (!isWhatsAppReady) {
+      console.log("⚠️ Forzando ready manualmente...");
+      isWhatsAppReady = true;
+      console.log("✅ WhatsApp marcado como listo");
+    }
+  }, 10000);
+
+  whatsappClient.on('message', async (msg) => {
+  try {
+    const chat = await msg.getChat();
+    
+    console.log('\n' + '═'.repeat(50));
+    console.log('📩 MENSAJE DETECTADO');
+    console.log('═'.repeat(50));
+    console.log('💬 Chat ID:', chat.id._serialized);
+    console.log('👤 Chat Name:', chat.name);
+    console.log('👥 Es Grupo:', chat.isGroup);
+    console.log('📝 Mensaje:', msg.body);
+    console.log('═'.repeat(50) + '\n');
+    
+    // Si es un grupo, resaltar
+    if (chat.isGroup) {
+      console.log('🎯 GRUPO DETECTADO! Copia este ID:');
+      console.log('   ', chat.id._serialized);
+      console.log('\n');
+    }
+  } catch (error) {
+    console.log('Error procesando mensaje:', error.message);
+  }
+});
 }
 
   //Envio de mensajes con Whatsapp
