@@ -38,7 +38,7 @@ function initWhatsApp() {
 
     //Tener un navegador invisible
     puppeteer: {
-      headless: false,
+      headless: true,
       executablePath: undefined,
       args: [
         "--no-sandbox",
@@ -71,11 +71,13 @@ function initWhatsApp() {
 
   whatsappClient.on("authenticated", () => {
     console.log("Sesión de WhatsApp autenticada");
-    setTimeout(() => {
-      console.log("✅ Marcando WhatsApp como listo...");
-      isWhatsAppReady = true;
-      console.log("✅ ¡Bot listo para usar!");
-    }, 15000); // Reducido a 15 segundos
+    console.log("Esperando que WhatsApp esté completamente listo...");
+    isWhatsAppReady = true;
+    console.log("✅ Bot marcado como listo");
+  });
+
+  whatsappClient.on('loading_screen', (percent, message) => {
+    console.log(`Cargando WhatsApp: ${percent}% - ${message}`);
   });
 
   whatsappClient.on("auth_failure", (error) => {
@@ -87,26 +89,25 @@ function initWhatsApp() {
     isWhatsAppReady = false;
   });
 
+  whatsappClient.on('message', () => {
+    console.log('✅ Evento de mensaje detectado');
+  });
+
   // EVENTO PARA DETECTAR MENSAJES (CORREGIDO - YA NO ESTÁ ANIDADO)
- whatsappClient.on('message_create', async (msg) => {
+  whatsappClient.on('message', async (msg) => {
+    console.log('\n🔔 MENSAJE RECIBIDO');
+    console.log('De:', msg.from);
+    console.log('Texto:', msg.body);
+    
     try {
       const chat = await msg.getChat();
-      
-      // Solo mostrar info si es un grupo
-      if (chat.isGroup) {
-        console.log('\n' + '═'.repeat(60));
-        console.log('🎯 GRUPO DETECTADO');
-        console.log('═'.repeat(60));
-        console.log('📌 Nombre:', chat.name);
-        console.log('🆔 ID:', chat.id._serialized);
-        console.log('📝 Mensaje:', msg.body.substring(0, 50));
-        console.log('═'.repeat(60) + '\n');
-        console.log('👉 COPIA ESTE ID Y PÉGALO EN .env:');
-        console.log('   WHATSAPP_CHAT_ID=' + chat.id._serialized);
-        console.log('\n');
-      }
+      console.log('Es grupo:', chat.isGroup);
+      console.log('Nombre chat:', chat.name);
+      console.log('ID completo:', chat.id._serialized);
+      console.log('\n👉 USA ESTE ID:', chat.id._serialized);
+      console.log('═'.repeat(60) + '\n');
     } catch (error) {
-      // Ignorar errores silenciosamente
+      console.error('Error obteniendo info del chat:', error.message);
     }
   });
 
