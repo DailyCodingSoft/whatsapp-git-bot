@@ -93,21 +93,31 @@ function initWhatsApp() {
     console.log('✅ Evento de mensaje detectado');
   });
 
-  // EVENTO PARA DETECTAR MENSAJES (CORREGIDO - YA NO ESTÁ ANIDADO)
-  whatsappClient.on('message', async (msg) => {
-    console.log('\n🔔 MENSAJE RECIBIDO');
-    console.log('De:', msg.from);
-    console.log('Texto:', msg.body);
-    
+  whatsappClient.on('message_create', async (msg) => {
     try {
+      console.log('\nEvento message_create disparado');
+      console.log('   De:', msg.from);
+      console.log('   Cuerpo:', msg.body);
+      
       const chat = await msg.getChat();
-      console.log('Es grupo:', chat.isGroup);
-      console.log('Nombre chat:', chat.name);
-      console.log('ID completo:', chat.id._serialized);
-      console.log('\n👉 USA ESTE ID:', chat.id._serialized);
-      console.log('═'.repeat(60) + '\n');
+      
+      console.log('   Chat obtenido:', chat.name || 'Sin nombre');
+      console.log('   Es grupo:', chat.isGroup);
+      console.log('   Chat ID:', chat.id._serialized);
+      
+      if (chat.isGroup) {
+        console.log('\n' + '═'.repeat(60));
+        console.log('¡GRUPO DETECTADO!');
+        console.log('═'.repeat(60));
+        console.log('Nombre del grupo:', chat.name);
+        console.log('ID del grupo:', chat.id._serialized);
+        console.log('Último mensaje:', msg.body.substring(0, 50));
+        console.log('═'.repeat(60));
+        console.log('WHATSAPP_CHAT_ID=' + chat.id._serialized);
+        console.log('\n');
+      }
     } catch (error) {
-      console.error('Error obteniendo info del chat:', error.message);
+      console.error('Error en message_create:', error.message);
     }
   });
 
