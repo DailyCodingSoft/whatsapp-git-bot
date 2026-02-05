@@ -104,7 +104,7 @@ function initWhatsApp() {
       console.log('   Chat obtenido:', chat.name || 'Sin nombre');
       console.log('   Es grupo:', chat.isGroup);
       console.log('   Chat ID:', chat.id._serialized);
-      
+
       if (chat.isGroup) {
         console.log('\n' + '═'.repeat(60));
         console.log('¡GRUPO DETECTADO!');
@@ -120,6 +120,7 @@ function initWhatsApp() {
       console.error('Error en message_create:', error.message);
     }
   });
+
 
   // Inicializar WhatsApp
   whatsappClient.initialize();
@@ -371,4 +372,35 @@ process.on('SIGINT', async () => {
   
   console.log('Servidor cerrado');
   process.exit(0);
+});
+
+// Endpoint para obtener todos los chats
+app.get('/chats', async (req, res) => {
+  try {
+    if (!isWhatsAppReady) {
+      return res.status(500).json({ 
+        error: 'WhatsApp no está listo',
+        message: 'El cliente de WhatsApp aún no está conectado'
+      });
+    }
+
+    // Obtener todos los chats
+    const chats = await whatsappClient.getChats();
+    const chatDetails = chats.map(chat => {
+      return {
+        name: chat.name || 'Sin nombre',
+        id: chat.id._serialized, // ID del chat
+        isGroup: chat.isGroup, // Si es un grupo
+      };
+    });
+
+    // Devolver los detalles de los chats
+    res.json(chatDetails);
+  } catch (error) {
+    console.error('Error obteniendo chats:', error);
+    res.status(500).json({ 
+      error: 'No se pudo obtener los chats',
+      message: error.message 
+    });
+  }
 });
