@@ -6,6 +6,16 @@ const crypto = require("crypto");
 const { log } = require("console");
 require("dotenv").config();
 
+const WhatsAppState = {
+  INIT: 'init',
+  AUTHENTICATED: 'authenticated',
+  READY: 'ready',
+  DISCONNECTED: 'disconnected'
+};
+
+let waState = WhatsAppState.INIT;
+
+
 console.log('✅ Paso 1: Librerías cargadas');
 
 const app = express();
@@ -63,17 +73,12 @@ function initWhatsApp() {
     console.log("4. Escanea el QR de arriba\n");
   });
 
-  whatsappClient.on("ready", () => {
-    console.log("¡WhatsApp conectado exitosamente!");
-    console.log("El bot está listo para recibir webhooks\n");
-    isWhatsAppReady = true;
+  whatsappClient.on('authenticated', () => {
+    waState = WhatsAppState.AUTHENTICATED;
   });
 
-  whatsappClient.on("authenticated", () => {
-    console.log("Sesión de WhatsApp autenticada");
-    console.log("Esperando que WhatsApp esté completamente listo...");
-    isWhatsAppReady = true;
-    console.log("✅ Bot marcado como listo");
+  whatsappClient.on('ready', () => {
+    waState = WhatsAppState.READY;
   });
 
   whatsappClient.on('loading_screen', (percent, message) => {
@@ -84,9 +89,8 @@ function initWhatsApp() {
     console.error("Error de autenticación:", error);
   });
 
-  whatsappClient.on("disconnected", (reason) => {
-    console.log("Desconectado:", reason);
-    isWhatsAppReady = false;
+  whatsappClient.on('disconnected', () => {
+    waState = WhatsAppState.DISCONNECTED;
   });
 
   whatsappClient.on('message', () => {
@@ -129,9 +133,8 @@ function initWhatsApp() {
 //Envio de mensajes con Whatsapp
 async function sendWhatsAppMessage(message, chatId = WHATSAPP_CHAT_ID) {
   // Verificar que WhatsApp esté conectado
-  if (!isWhatsAppReady) {
-    console.error("WhatsApp no está listo. Espera a que se conecte.");
-    return false;
+  if (waState !== WhatsAppState.READY) {
+    throw new Error('WhatsApp no listo');
   }
 
   // Verificar que tengamos un chat ID configurado
