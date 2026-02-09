@@ -14,7 +14,7 @@ const WhatsAppState = {
 };
 
 let waState = WhatsAppState.INIT;
-
+let initializing = false;
 
 console.log('✅ Paso 1: Librerías cargadas');
 
@@ -407,3 +407,14 @@ app.get('/chats', async (req, res) => {
     });
   }
 });
+
+async function safeInitWhatsApp() {
+  if (initializing || waState === WhatsAppState.READY) return;
+
+  initializing = true;
+  try {
+    await whatsappClient.initialize();
+  } finally {
+    initializing = false;
+  }
+}
